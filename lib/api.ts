@@ -2,7 +2,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_MAIN_API;
 
 if (!BASE_URL) {
   throw new Error(
-    "NEXT_PUBLIC_MAIN_API is not defined in environment variables"
+    "NEXT_PUBLIC_MAIN_API is not defined in environment variables",
   );
 }
 
@@ -21,7 +21,7 @@ class ApiClient {
 
   private async request<T = any>(
     path: string,
-    options: RequestOptions = {}
+    options: RequestOptions = {},
   ): Promise<T> {
     const { method = "GET", body, token } = options;
 
@@ -78,7 +78,7 @@ class ApiClient {
 
   getAllUserTables(projectId?: string) {
     const accessToken = this.getTokenFromStorage();
-    return this.request(`/api/v1/cms-tables/project/${projectId}`, {
+    return this.request(`/api/v1/tables/project/${projectId}`, {
       token: accessToken,
     });
   }
@@ -124,7 +124,7 @@ class ApiClient {
 
   createTable(projectId: string, name: string, isSubTable: boolean) {
     const accessToken = this.getTokenFromStorage();
-    return this.request("/api/v1/cms-tables", {
+    return this.request("/api/v1/tables", {
       method: "POST",
       body: { projectId, name, isSubTable },
       token: accessToken,
@@ -142,7 +142,7 @@ class ApiClient {
 
   deleteTable(tableId: string) {
     const accessToken = this.getTokenFromStorage();
-    return this.request(`/api/v1/cms-tables/${tableId}`, {
+    return this.request(`/api/v1/tables/${tableId}`, {
       method: "DELETE",
       token: accessToken,
     });
@@ -184,7 +184,7 @@ class ApiClient {
   async updateCellWithImage(
     rowId: string,
     columnId: string,
-    image: File
+    image: File,
   ): Promise<any> {
     const accessToken = this.getTokenFromStorage();
     const formData = new FormData();
@@ -242,7 +242,7 @@ class ApiClient {
 
   updateTables(tableId: string, name: string) {
     const accessToken = this.getTokenFromStorage();
-    return this.request(`/api/v1/cms-tables/${tableId}`, {
+    return this.request(`/api/v1/tables/${tableId}`, {
       method: "PUT",
       body: { name },
       token: accessToken,

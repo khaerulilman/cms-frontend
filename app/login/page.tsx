@@ -1,28 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading, login } = useAuth();
   const [error, setError] = useState("");
+  const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push("/projects");
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  // Handle Google OAuth callback
+  // Handle Google OAuth callback FIRST
   useEffect(() => {
     const accessToken = searchParams.get("accessToken");
     const refreshToken = searchParams.get("refreshToken");
 
-    if (accessToken && refreshToken) {
+    if (accessToken && refreshToken && !isProcessingOAuth) {
+      setIsProcessingOAuth(true);
+
       const storeTokensAndFetchUser = async () => {
         try {
           // Fetch user profile
@@ -33,7 +29,7 @@ export default function LoginPage() {
                 Authorization: `Bearer ${accessToken}`,
                 "Content-Type": "application/json",
               },
-            }
+            },
           );
 
           if (!response.ok) {
@@ -43,20 +39,38 @@ export default function LoginPage() {
           const result = await response.json();
 
           if (result.success && result.data) {
+            // Store tokens and user data
             login(result.data, accessToken);
-            router.push("/projects");
+            if (refreshToken) {
+              localStorage.setItem("refreshToken", refreshToken);
+            }
+
+            // Clean URL and redirect
+            router.replace("/projects");
           } else {
             throw new Error("Invalid response format");
           }
         } catch (error) {
           console.error("Authentication error:", error);
           setError("Failed to complete authentication. Please try again.");
+          setIsProcessingOAuth(false);
         }
       };
 
       storeTokensAndFetchUser();
     }
-  }, [searchParams, login, router]);
+  }, [searchParams, login, router, isProcessingOAuth]);
+
+  // Redirect if already authenticated (but not during OAuth processing)
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && !isProcessingOAuth) {
+      const hasOAuthParams =
+        searchParams.get("accessToken") || searchParams.get("refreshToken");
+      if (!hasOAuthParams) {
+        router.replace("/projects");
+      }
+    }
+  }, [isAuthenticated, isLoading, router, isProcessingOAuth, searchParams]);
 
   const handleGoogleLogin = () => {
     // Redirect to backend Google OAuth endpoint
@@ -146,5 +160,22 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4" />
+            <p className="text-slate-400">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
