@@ -35,32 +35,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   // Check authentication on mount
+  // Skip if we're in the middle of an OAuth callback (cookies are being set)
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const isOAuthCallback =
+        params.get("oauth") === "success" && params.get("user");
+      if (isOAuthCallback) {
+        // Don't check auth during OAuth callback - login page will handle it
+        setIsLoading(false);
+        return;
+      }
+    }
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
     try {
-      // First check local storage for user data (for quick UI update)
-      if (typeof window !== "undefined") {
-        const userData = localStorage.getItem("user");
-        if (userData) {
-          try {
-            const parsedUser = JSON.parse(userData);
-            setUser(parsedUser);
-            setIsAuthenticated(true);
-          } catch (error) {
-            console.error("Failed to parse user data:", error);
-          }
-        }
-      }
-
-      // Then verify with backend using cookie
+      // Verify session with backend using cookie
       const response = await api.getProfile();
       if (response.success && response.data) {
         setUser(response.data);
         setIsAuthenticated(true);
-        // Update local storage with fresh data
         if (typeof window !== "undefined") {
           localStorage.setItem("user", JSON.stringify(response.data));
         }
