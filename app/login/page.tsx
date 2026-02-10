@@ -21,6 +21,9 @@ function LoginContent() {
     if (userParam && oauthSuccess === "success" && !isProcessingOAuth) {
       setIsProcessingOAuth(true);
 
+      // Immediately clear URL params to prevent double execution
+      router.replace("/login", { scroll: false });
+
       const handleOAuthCallback = async () => {
         try {
           // Decode base64 user data
@@ -35,7 +38,7 @@ function LoginContent() {
           // Store user data in state
           login(userData);
 
-          // Clean URL and redirect
+          // Redirect to projects
           router.replace("/projects");
         } catch (err) {
           console.error("Authentication error:", err);
