@@ -418,7 +418,7 @@ export default function Home() {
       name: "Sarah Johnson",
       role: "UI/UX Designer",
       content:
-        "I can finally update my portfolio without touching code. The API integration with my Next.js site was incredibly smooth.",
+        "I can finally update my portfolio without strugling with databases. The API integration with my Next.js site was incredibly smooth.",
     },
     {
       name: "Michael Park",
@@ -429,9 +429,9 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] bg-grid-pattern overflow-x-hidden">
+    <div className="min-h-screen bg-[#0a0f1a] bg-grid-pattern overflow-x-hidden scroll-smooth">
       {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8">
+      <section id="home" className="relative py-20 px-4 sm:px-6 lg:px-8">
         {/* Background Glow Effects */}
         <div className="absolute top-20 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse-glow pointer-events-none" />
         <div
@@ -442,20 +442,20 @@ export default function Home() {
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-8">
+            {/* <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-8">
               <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-              <span className="text-sm text-blue-300">
-                Headless CMS for Developers
-              </span>
-            </div>
+              <span className="text-sm text-blue-300">Your Dash</span>
+            </div> */}
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-              Build Your Portfolio,
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight mt-20">
+              Build Your Dynamic Portfolio,
               <br />
-              <span className="gradient-text">Without The Backend Hassle</span>
+              <span className="gradient-text">
+                Without Struggling With the Database
+              </span>
             </h1>
             <p className="text-lg sm:text-xl text-slate-400 mb-10 max-w-3xl mx-auto leading-relaxed">
-              PortfolioCMS is a headless content management system designed
+              Your Dash is a headless content management system designed
               specifically for developers. Manage your portfolio content through
               an intuitive dashboard and access it via powerful REST APIs.
             </p>
@@ -518,7 +518,7 @@ export default function Home() {
               <pre className="text-slate-300">
                 <code>
                   {`// Fetch your portfolio data with a simple API call
-const response = await fetch('https://api.portfoliocms.io/v1/projects', {
+const response = await fetch('https://yourdash-virid.vercel.app/api/v1/projects', {
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY',
     'Content-Type': 'application/json'
@@ -584,7 +584,7 @@ projects.forEach(project => {
       </section>
 
       {/* Dashboard Preview Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
@@ -597,101 +597,130 @@ projects.forEach(project => {
 
           {/* Dashboard Mockup */}
           <div className="glass-card rounded-2xl overflow-hidden glow-blue">
+            {/* Browser Chrome */}
             <div className="flex items-center gap-2 px-4 py-3 bg-slate-900/80 border-b border-slate-700/50">
               <div className="w-3 h-3 rounded-full bg-red-500/70" />
               <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
               <div className="w-3 h-3 rounded-full bg-green-500/70" />
               <span className="ml-4 text-sm text-slate-400">
-                portfoliocms.io/dashboard
+                yourdash.io/projects/tableId
               </span>
             </div>
-            <div className="p-6 bg-slate-900/30">
-              {/* Dashboard Content Preview */}
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
-                <div className="lg:col-span-1 space-y-4">
-                  {/* Sidebar */}
-                  <div className="rounded-xl bg-slate-800/50 p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <CubeIcon />
-                      <span className="text-white font-medium">Projects</span>
+
+            <div className="flex bg-[#0a0f1a] min-h-[420px]">
+              {/* Sidebar */}
+              <div className="w-48 bg-[#111828] border-r border-slate-800/50 p-4 flex flex-col">
+                <h3 className="text-sm font-semibold mb-3 bg-gradient-to-r from-blue-400 to-cyan-400 text-transparent bg-clip-text">
+                  Tables
+                </h3>
+                <div className="flex flex-col gap-2 flex-1">
+                  {["Projects", "Certificates"].map((name, i) => (
+                    <div
+                      key={i}
+                      className={`px-3 py-2 rounded-xl text-sm border-2 transition-all ${
+                        i === 0
+                          ? "border-blue-500/30 bg-slate-800/50 text-white shadow-lg shadow-blue-500/10"
+                          : "border-slate-700/30 text-slate-400"
+                      }`}
+                    >
+                      {name}
                     </div>
-                    <div className="space-y-2">
-                      {[
-                        "Overview",
-                        "Content Types",
-                        "Media Library",
-                        "API Keys",
-                        "Settings",
-                      ].map((item, i) => (
-                        <div
-                          key={i}
-                          className={`px-3 py-2 rounded-lg text-sm ${
-                            i === 0
-                              ? "bg-blue-500/20 text-blue-300"
-                              : "text-slate-400"
-                          }`}
-                        >
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  ))}
                 </div>
-                <div className="lg:col-span-3 space-y-4">
-                  {/* Main Content Area */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="rounded-xl bg-slate-800/50 p-4">
-                      <div className="text-slate-400 text-sm mb-1">
-                        Total Projects
-                      </div>
-                      <div className="text-2xl font-bold text-white">12</div>
+                <div className="mt-4 py-2 rounded-xl border border-dashed border-slate-700/50 text-slate-400 text-sm text-center">
+                  + Add Table
+                </div>
+              </div>
+
+              {/* Main Content */}
+              <div className="flex-1 p-6 overflow-hidden">
+                <div className="bg-slate-900/30 border border-slate-800/50 rounded-2xl">
+                  {/* Table Header */}
+                  <div className="flex justify-between items-center px-5 py-3 border-b border-slate-700/50">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 text-transparent bg-clip-text">
+                        Projects
+                      </span>
+                      <span className="text-slate-500 text-sm cursor-pointer">
+                        ✎
+                      </span>
                     </div>
-                    <div className="rounded-xl bg-slate-800/50 p-4">
-                      <div className="text-slate-400 text-sm mb-1">
-                        API Requests Today
-                      </div>
-                      <div className="text-2xl font-bold text-white">2,847</div>
-                    </div>
-                    <div className="rounded-xl bg-slate-800/50 p-4">
-                      <div className="text-slate-400 text-sm mb-1">
-                        Content Items
-                      </div>
-                      <div className="text-2xl font-bold text-white">89</div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 text-white text-xs font-medium">
+                        Get Data
+                      </span>
+                      <span className="px-3 py-1.5 rounded-xl border border-dashed border-slate-700/50 text-slate-400 text-xs">
+                        + Add Column
+                      </span>
                     </div>
                   </div>
-                  {/* Project List */}
-                  <div className="rounded-xl bg-slate-800/50 p-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="text-white font-medium">
-                        Recent Projects
-                      </h4>
-                      <button className="text-blue-400 text-sm">
-                        View All
-                      </button>
-                    </div>
-                    <div className="space-y-3">
-                      {[
-                        { name: "E-Commerce Platform", status: "Published" },
-                        { name: "Portfolio Website", status: "Draft" },
-                        { name: "Mobile App UI", status: "Published" },
-                      ].map((project, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center justify-between py-2 border-b border-slate-700/50 last:border-0"
-                        >
-                          <span className="text-slate-300">{project.name}</span>
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full ${
-                              project.status === "Published"
-                                ? "bg-green-500/20 text-green-400"
-                                : "bg-yellow-500/20 text-yellow-400"
-                            }`}
+
+                  {/* Data Table */}
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-700/50">
+                      <thead className="bg-slate-800/50">
+                        <tr>
+                          <th className="px-5 py-2.5 text-center text-[11px] font-semibold text-slate-300 uppercase tracking-wider border-r border-slate-700/50">
+                            No
+                          </th>
+                          <th className="px-5 py-2.5 text-left text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
+                            <div className="flex items-center justify-between">
+                              <span>Image</span>
+                              <span className="text-red-500 text-[10px]">
+                                ✕
+                              </span>
+                            </div>
+                          </th>
+                          <th className="px-5 py-2.5 text-left text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
+                            <div className="flex items-center justify-between">
+                              <span>Description</span>
+                              <span className="text-red-500 text-[10px]">
+                                ✕
+                              </span>
+                            </div>
+                          </th>
+                          <th className="px-5 py-2.5 text-center text-[11px] font-semibold text-slate-300 uppercase tracking-wider border-l border-slate-700/50">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-slate-900/20 divide-y divide-slate-700/50">
+                        {[
+                          { img: "💻", desc: "node js, rest api" },
+                          { img: "🐳", desc: "postgre sql, docker" },
+                          { img: "⚡", desc: "golang, vue" },
+                        ].map((row, i) => (
+                          <tr
+                            key={i}
+                            className="hover:bg-slate-800/30 transition-colors"
                           >
-                            {project.status}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                            <td className="px-5 py-3 text-sm text-slate-300 text-center border-r border-slate-700/50">
+                              {i + 1}
+                            </td>
+                            <td className="px-5 py-3">
+                              <div className="h-10 w-10 rounded border border-slate-700/50 bg-slate-700/30 flex items-center justify-center text-lg">
+                                {row.img}
+                              </div>
+                            </td>
+                            <td className="px-5 py-3 text-sm text-slate-300">
+                              {row.desc}
+                            </td>
+                            <td className="px-5 py-3 text-center border-l border-slate-700/50">
+                              <span className="text-red-500 text-xs font-medium">
+                                DELETE
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Add Row Footer */}
+                  <div className="px-5 py-3 border-t border-slate-700/50 bg-slate-800/30">
+                    <span className="py-1.5 px-3 rounded-xl border border-dashed border-slate-700/50 text-slate-400 text-xs">
+                      + Add Row
+                    </span>
                   </div>
                 </div>
               </div>
@@ -708,7 +737,7 @@ projects.forEach(project => {
               Loved by <span className="gradient-text">Developers</span>
             </h2>
             <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-              See what developers are saying about PortfolioCMS.
+              See what developers are saying about Your Dash.
             </p>
           </div>
 
@@ -721,7 +750,7 @@ projects.forEach(project => {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 relative">
+      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 relative">
         <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 via-transparent to-transparent pointer-events-none" />
         <div className="max-w-5xl mx-auto relative z-10">
           <div className="text-center mb-16">
@@ -782,7 +811,7 @@ projects.forEach(project => {
             {/* Brand */}
             <div className="md:col-span-1">
               <div className="text-2xl font-bold gradient-text mb-4">
-                PortfolioCMS
+                Your Dash
               </div>
               <p className="text-slate-400 text-sm">
                 The headless CMS built for developer portfolios.
@@ -865,7 +894,7 @@ projects.forEach(project => {
           </div>
 
           <div className="pt-8 border-t border-slate-800 text-center text-sm text-slate-400">
-            &copy; 2026 PortfolioCMS. All rights reserved.
+            &copy; 2026 Yourdash. All rights reserved.
           </div>
         </div>
       </footer>

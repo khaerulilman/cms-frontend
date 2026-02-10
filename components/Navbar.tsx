@@ -37,28 +37,26 @@ export default function Navbar() {
                 />
               </svg>
             </div>
-            <span className="text-xl font-bold gradient-text">
-              PortfolioCMS
-            </span>
+            <span className="text-xl font-bold gradient-text">Your Dash</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              className="text-slate-300 text-sm font-medium transition-colors"
+            <a
+              href="/#home"
+              className="text-slate-300 text-sm font-medium transition-colors duration-300 hover:text-blue-400"
             >
               Home
-            </Link>
+            </a>
             <a
-              href="#features"
-              className="text-slate-300 text-sm font-medium transition-colors"
+              href="/#features"
+              className="text-slate-300 text-sm font-medium transition-colors duration-300 hover:text-blue-400"
             >
               Features
             </a>
             <a
-              href="#pricing"
-              className="text-slate-300 text-sm font-medium transition-colors"
+              href="/#pricing"
+              className="text-slate-300 text-sm font-medium transition-colors duration-300 hover:text-blue-400"
             >
               Pricing
             </a>
@@ -133,23 +131,23 @@ export default function Navbar() {
         {isOpen && (
           <div className="md:hidden pb-4 pt-2">
             <div className="space-y-1">
-              <Link
-                href="/"
-                className="block px-4 py-3 rounded-lg text-slate-300 bg-slate-800/30"
+              <a
+                href="/#home"
+                className="block px-4 py-3 rounded-lg text-slate-300 bg-slate-800/30 transition-colors duration-300 hover:bg-slate-700/50"
                 onClick={() => setIsOpen(false)}
               >
                 Home
-              </Link>
+              </a>
               <a
-                href="#features"
-                className="block px-4 py-3 rounded-lg text-slate-300 bg-slate-800/30"
+                href="/#features"
+                className="block px-4 py-3 rounded-lg text-slate-300 bg-slate-800/30 transition-colors duration-300 hover:bg-slate-700/50"
                 onClick={() => setIsOpen(false)}
               >
                 Features
               </a>
               <a
-                href="#pricing"
-                className="block px-4 py-3 rounded-lg text-slate-300 bg-slate-800/30"
+                href="/#pricing"
+                className="block px-4 py-3 rounded-lg text-slate-300 bg-slate-800/30 transition-colors duration-300 hover:bg-slate-700/50"
                 onClick={() => setIsOpen(false)}
               >
                 Pricing
