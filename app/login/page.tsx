@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { BACKEND_URL, api } from "@/lib/api";
 
 function LoginContent() {
   const router = useRouter();
@@ -11,28 +12,39 @@ function LoginContent() {
   const [error, setError] = useState("");
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
 
-  // Handle Google OAuth callback (cookies are set by backend, just need user data)
+  // Handle Google OAuth callback
   useEffect(() => {
     const userParam = searchParams.get("user");
     const oauthSuccess = searchParams.get("oauth");
+    const setupToken = searchParams.get("setup_token");
 
     if (userParam && oauthSuccess === "success" && !isProcessingOAuth) {
       setIsProcessingOAuth(true);
 
-      try {
-        // Decode base64 user data
-        const userData = JSON.parse(atob(userParam));
+      const handleOAuthCallback = async () => {
+        try {
+          // Decode base64 user data
+          const userData = JSON.parse(atob(userParam));
 
-        // Store user data (cookies are already set by backend)
-        login(userData);
+          // If setup_token is present, exchange it for cookies via proxy
+          // This handles cross-origin scenarios (e.g., localhost frontend + cloud backend)
+          if (setupToken) {
+            await api.establishSession(setupToken);
+          }
 
-        // Clean URL and redirect
-        router.replace("/projects");
-      } catch (error) {
-        console.error("Authentication error:", error);
-        setError("Failed to complete authentication. Please try again.");
-        setIsProcessingOAuth(false);
-      }
+          // Store user data in state
+          login(userData);
+
+          // Clean URL and redirect
+          router.replace("/projects");
+        } catch (err) {
+          console.error("Authentication error:", err);
+          setError("Failed to complete authentication. Please try again.");
+          setIsProcessingOAuth(false);
+        }
+      };
+
+      handleOAuthCallback();
     }
   }, [searchParams, login, router, isProcessingOAuth]);
 
@@ -49,7 +61,7 @@ function LoginContent() {
 
   const handleGoogleLogin = () => {
     // Redirect to backend Google OAuth endpoint
-    window.location.href = `${process.env.NEXT_PUBLIC_MAIN_API}/api/v1/auth/google`;
+    window.location.href = `${BACKEND_URL}/api/v1/auth/google`;
   };
 
   if (isLoading) {
