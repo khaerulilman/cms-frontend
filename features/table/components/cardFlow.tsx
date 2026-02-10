@@ -35,7 +35,7 @@ export function CardFlow({
   const [useSubTableMode, setUseSubTableMode] = useState(false);
   const [subTables, setSubTables] = useState<any[]>([]);
   const [selectedSubTableId, setSelectedSubTableId] = useState<string | null>(
-    null
+    null,
   );
   const [loadingSubTables, setLoadingSubTables] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -61,7 +61,7 @@ export function CardFlow({
         try {
           const data = await api.getAllUserTables(projectId);
           const currentTable = data.data.find(
-            (table: any) => table.id === selectedTable
+            (table: any) => table.id === selectedTable,
           );
           if (currentTable) {
             setTableName(currentTable.name);
@@ -106,7 +106,7 @@ export function CardFlow({
 
     // Check if the cell value is a valid sub-table ID
     const isValidSubTableId = subTables.some(
-      (table) => table.id === cellValueToUse
+      (table) => table.id === cellValueToUse,
     );
 
     if (isValidSubTableId) {
@@ -372,7 +372,69 @@ export function CardFlow({
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Compress image before upload
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Failed to get canvas context"));
+            return;
+          }
+
+          // Calculate new dimensions (max 1920px width/height)
+          let width = img.width;
+          let height = img.height;
+          const maxDimension = 1920;
+
+          if (width > height && width > maxDimension) {
+            height = (height * maxDimension) / width;
+            width = maxDimension;
+          } else if (height > maxDimension) {
+            width = (width * maxDimension) / height;
+            height = maxDimension;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Draw and compress
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to blob with quality 0.8 (80% quality)
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name, {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              } else {
+                reject(new Error("Failed to compress image"));
+              }
+            },
+            "image/jpeg",
+            0.8,
+          );
+        };
+        img.onerror = () => {
+          reject(new Error("Failed to load image"));
+        };
+      };
+      reader.onerror = () => {
+        reject(new Error("Failed to read file"));
+      };
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Validate file type
@@ -380,19 +442,31 @@ export function CardFlow({
         setError("Please select a valid image file");
         return;
       }
-      // Validate file size (max 10MB)
+      // Validate file size (max 10MB before compression)
       if (file.size > 10 * 1024 * 1024) {
         setError("File size must be less than 10MB");
         return;
       }
-      // Create local preview without uploading
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setLocalPreviewUrl(e.target?.result as string);
-        setSelectedFile(file);
+
+      try {
+        setUploading(true);
         setError(null);
-      };
-      reader.readAsDataURL(file);
+
+        // Compress image
+        const compressedFile = await compressImage(file);
+
+        // Create local preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setLocalPreviewUrl(e.target?.result as string);
+          setSelectedFile(compressedFile);
+          setUploading(false);
+        };
+        reader.readAsDataURL(compressedFile);
+      } catch (err: any) {
+        setError(err.message || "Failed to process image");
+        setUploading(false);
+      }
     }
   };
 
@@ -411,7 +485,7 @@ export function CardFlow({
         const response = await api.updateCellWithImage(
           selectedCell.rowId,
           selectedCell.columnId,
-          selectedFile
+          selectedFile,
         );
         // Backend returns the Cloudinary URL - response handled automatically
       }
@@ -420,7 +494,7 @@ export function CardFlow({
         await api.updateCellImage(
           selectedCell.rowId,
           selectedCell.columnId,
-          uploadedImageUrl
+          uploadedImageUrl,
         );
       }
       // Kondisi 3: No file and no image, use regular JSON update with text value
@@ -436,7 +510,7 @@ export function CardFlow({
         await api.updateCell(
           selectedCell.rowId,
           selectedCell.columnId,
-          finalValue || ""
+          finalValue || "",
         );
       }
 
@@ -465,20 +539,20 @@ export function CardFlow({
             {isOpen === "add-column"
               ? "Add Column"
               : isOpen === "edit-column"
-              ? "Edit Column"
-              : isOpen === "add-table"
-              ? "Add Table"
-              : isOpen === "edit-table"
-              ? "Edit Table"
-              : isOpen === "delete-table"
-              ? "Delete Table"
-              : isOpen === "delete-row"
-              ? "Delete Row"
-              : isOpen === "delete-column"
-              ? "Delete Column"
-              : isOpen === "update-cell"
-              ? "Edit Cell"
-              : ""}
+                ? "Edit Column"
+                : isOpen === "add-table"
+                  ? "Add Table"
+                  : isOpen === "edit-table"
+                    ? "Edit Table"
+                    : isOpen === "delete-table"
+                      ? "Delete Table"
+                      : isOpen === "delete-row"
+                        ? "Delete Row"
+                        : isOpen === "delete-column"
+                          ? "Delete Column"
+                          : isOpen === "update-cell"
+                            ? "Edit Cell"
+                            : ""}
           </h2>
           <button
             onClick={onClose}
@@ -652,22 +726,54 @@ export function CardFlow({
                         htmlFor="image-upload"
                         className="cursor-pointer flex flex-col items-center gap-2"
                       >
-                        <svg
-                          className="w-8 h-8 text-slate-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                        <span className="text-sm text-slate-600">
-                          Click to upload image
-                        </span>
+                        {uploading ? (
+                          <>
+                            <svg
+                              className="w-8 h-8 text-blue-500 animate-spin"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              />
+                            </svg>
+                            <span className="text-sm text-blue-500">
+                              Compressing image...
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              className="w-8 h-8 text-slate-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                            <span className="text-sm text-slate-600">
+                              Click to upload image
+                            </span>
+                            <span className="text-xs text-slate-400">
+                              Image will be auto-compressed
+                            </span>
+                          </>
+                        )}
                       </label>
                     </div>
                   )}
