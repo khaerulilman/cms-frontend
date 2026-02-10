@@ -7,6 +7,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
+import { api } from "@/lib/api";
 
 interface User {
   id: string;
@@ -19,9 +20,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   isLoading: boolean;
-  login: (user: User, token: string) => void;
-  logout: () => void;
-  checkAuth: () => void;
+  login: (user: User) => void;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,45 +39,78 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     checkAuth();
   }, []);
 
-  const checkAuth = () => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("accessToken");
-      const userData = localStorage.getItem("user");
-
-      if (token && userData) {
-        try {
-          const parsedUser = JSON.parse(userData);
-          setUser(parsedUser);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error("Failed to parse user data:", error);
-          logout();
+  const checkAuth = async () => {
+    try {
+      // First check local storage for user data (for quick UI update)
+      if (typeof window !== "undefined") {
+        const userData = localStorage.getItem("user");
+        if (userData) {
+          try {
+            const parsedUser = JSON.parse(userData);
+            setUser(parsedUser);
+            setIsAuthenticated(true);
+          } catch (error) {
+            console.error("Failed to parse user data:", error);
+          }
         }
-      } else {
+      }
+
+      // Then verify with backend using cookie
+      const response = await api.getProfile();
+      if (response.success && response.data) {
+        setUser(response.data);
+        setIsAuthenticated(true);
+        // Update local storage with fresh data
+        if (typeof window !== "undefined") {
+          localStorage.setItem("user", JSON.stringify(response.data));
+        }
+      }
+    } catch (error) {
+      // Token might be invalid or expired, try refresh
+      try {
+        await api.refreshToken();
+        // If refresh succeeds, try to get profile again
+        const response = await api.getProfile();
+        if (response.success && response.data) {
+          setUser(response.data);
+          setIsAuthenticated(true);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("user", JSON.stringify(response.data));
+          }
+        }
+      } catch (refreshError) {
+        // Both access and refresh tokens are invalid
         setIsAuthenticated(false);
         setUser(null);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("user");
+        }
       }
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
-  const login = (userData: User, token: string) => {
+  const login = (userData: User) => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("accessToken", token);
       localStorage.setItem("user", JSON.stringify(userData));
     }
     setUser(userData);
     setIsAuthenticated(true);
   };
 
-  const logout = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
+  const logout = async () => {
+    try {
+      await api.logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("user");
+      }
+      setUser(null);
+      setIsAuthenticated(false);
     }
-    setUser(null);
-    setIsAuthenticated(false);
   };
 
   return (

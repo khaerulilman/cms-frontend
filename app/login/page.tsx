@@ -11,53 +11,28 @@ function LoginContent() {
   const [error, setError] = useState("");
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
 
-  // Handle Google OAuth callback FIRST
+  // Handle Google OAuth callback (cookies are set by backend, just need user data)
   useEffect(() => {
-    const accessToken = searchParams.get("accessToken");
-    const refreshToken = searchParams.get("refreshToken");
+    const userParam = searchParams.get("user");
+    const oauthSuccess = searchParams.get("oauth");
 
-    if (accessToken && refreshToken && !isProcessingOAuth) {
+    if (userParam && oauthSuccess === "success" && !isProcessingOAuth) {
       setIsProcessingOAuth(true);
 
-      const storeTokensAndFetchUser = async () => {
-        try {
-          // Fetch user profile
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_MAIN_API}/api/v1/auth/profile`,
-            {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-              },
-            },
-          );
+      try {
+        // Decode base64 user data
+        const userData = JSON.parse(atob(userParam));
 
-          if (!response.ok) {
-            throw new Error("Failed to fetch user profile");
-          }
+        // Store user data (cookies are already set by backend)
+        login(userData);
 
-          const result = await response.json();
-
-          if (result.success && result.data) {
-            // Store tokens and user data
-            login(result.data, accessToken);
-            if (refreshToken) {
-              localStorage.setItem("refreshToken", refreshToken);
-            }
-
-            // Clean URL and redirect
-            router.replace("/projects");
-          } else {
-            throw new Error("Invalid response format");
-          }
-        } catch (error) {
-          console.error("Authentication error:", error);
-          setError("Failed to complete authentication. Please try again.");
-          setIsProcessingOAuth(false);
-        }
-      };
-
-      storeTokensAndFetchUser();
+        // Clean URL and redirect
+        router.replace("/projects");
+      } catch (error) {
+        console.error("Authentication error:", error);
+        setError("Failed to complete authentication. Please try again.");
+        setIsProcessingOAuth(false);
+      }
     }
   }, [searchParams, login, router, isProcessingOAuth]);
 
@@ -65,7 +40,7 @@ function LoginContent() {
   useEffect(() => {
     if (!isLoading && isAuthenticated && !isProcessingOAuth) {
       const hasOAuthParams =
-        searchParams.get("accessToken") || searchParams.get("refreshToken");
+        searchParams.get("user") || searchParams.get("oauth");
       if (!hasOAuthParams) {
         router.replace("/projects");
       }

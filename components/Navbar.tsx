@@ -10,8 +10,8 @@ export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push("/login");
     setIsOpen(false);
   };
