@@ -5,11 +5,12 @@ import { TableDetail } from "@/features/table/components/TableDetail";
 import { ApiGuideSidebar } from "@/features/table/components/ApiGuideSidebar";
 import { useState } from "react";
 import { CardFlow } from "@/features/table/components/cardFlow";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 function TableManagementContent() {
   const params = useParams();
+  const router = useRouter();
   const selectedTable = params.tableId as string;
   const projectId = params.projectId as string;
   const [isOpenCardFlow, setIsOpenCardFlow] = useState<string | null>(null);
@@ -27,6 +28,7 @@ function TableManagementContent() {
   } | null>(null);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [tableName, setTableName] = useState<string>("");
+  const [tableIdToDelete, setTableIdToDelete] = useState<string | null>(null);
 
   const handleRefresh = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -44,7 +46,8 @@ function TableManagementContent() {
     setSidebarRefresh((prev) => prev + 1);
   };
 
-  const handleDeleteTable = () => {
+  const handleDeleteTable = (tableId: string) => {
+    setTableIdToDelete(tableId);
     setIsOpenCardFlow("delete-table");
   };
 
@@ -54,6 +57,10 @@ function TableManagementContent() {
 
   const handleTableDeleted = () => {
     setSidebarRefresh((prev) => prev + 1);
+    // Redirect to project page if current table was deleted
+    if (tableIdToDelete === selectedTable) {
+      router.push(`/projects/${projectId}`);
+    }
   };
 
   const handleTableUpdated = () => {
@@ -80,7 +87,7 @@ function TableManagementContent() {
     rowId: string,
     columnId: string,
     value: string,
-    imageUrl: string = ""
+    imageUrl: string = "",
   ) => {
     setSelectedCellData({ rowId, columnId, value, imageUrl });
     setIsOpenCardFlow("update-cell");
@@ -111,7 +118,7 @@ function TableManagementContent() {
 
       <CardFlow
         isOpen={isOpenCardFlow}
-        selectedTable={selectedTable}
+        selectedTable={tableIdToDelete || selectedTable}
         selectedRow={selectedRowId}
         selectedColumn={selectedColumnId}
         selectedColumnData={selectedColumnData}
@@ -123,6 +130,7 @@ function TableManagementContent() {
           setSelectedColumnId(null);
           setSelectedColumnData(null);
           setSelectedCellData(null);
+          setTableIdToDelete(null);
         }}
         onRefresh={handleRefresh}
         onTableAdded={handleTableAdded}

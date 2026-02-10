@@ -34,9 +34,19 @@ export function TableSidebar({
   useEffect(() => {
     if (!projectId) return;
 
-    // Jika ada cache dan tidak refresh → skip fetch
-    if (tableCache[projectId] && !refreshKey) {
-      setTables(tableCache[projectId]);
+    // Jika refreshKey > 0, invalidate cache untuk force refresh
+    if (refreshKey > 0) {
+      delete tableCache[projectId];
+    }
+
+    // Jika ada cache dan tidak perlu refresh → skip fetch
+    if (tableCache[projectId]) {
+      // Sort cached tables by createdAt descending (newest first)
+      const sortedTables = tableCache[projectId].sort(
+        (a: Table, b: Table) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+      setTables(sortedTables);
       setLoading(false);
       return;
     }
@@ -45,8 +55,13 @@ export function TableSidebar({
       try {
         setLoading(true);
         const data = await api.getAllUserTables(projectId);
-        tableCache[projectId] = data.data;
-        setTables(data.data);
+        // Sort tables by createdAt descending (newest first)
+        const sortedTables = data.data.sort(
+          (a: Table, b: Table) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+        tableCache[projectId] = sortedTables;
+        setTables(sortedTables);
       } catch (err: any) {
         setError(err.message || "Failed to fetch tables");
       } finally {

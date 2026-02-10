@@ -11,6 +11,7 @@ export default function ProjectPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [isOpenCardFlow, setIsOpenCardFlow] = useState<string | null>(null);
   const [sidebarRefresh, setSidebarRefresh] = useState(0);
+  const [tableIdToDelete, setTableIdToDelete] = useState<string | null>(null);
 
   const handleSelectTable = (tableId: string) => {
     // Handled by TableSidebar's internal navigation
@@ -25,7 +26,8 @@ export default function ProjectPage() {
     setRefreshKey((prev) => prev + 1);
   };
 
-  const handleDeleteTable = () => {
+  const handleDeleteTable = (tableId: string) => {
+    setTableIdToDelete(tableId);
     setIsOpenCardFlow("delete-table");
   };
 
@@ -55,13 +57,14 @@ export default function ProjectPage() {
 
       <CardFlow
         isOpen={isOpenCardFlow}
-        selectedTable={null}
+        selectedTable={tableIdToDelete}
         selectedRow={null}
         selectedColumn={null}
         selectedCell={null}
         projectId={projectId}
         onClose={() => {
           setIsOpenCardFlow(null);
+          setTableIdToDelete(null);
         }}
         onRefresh={() => {}}
         onTableAdded={handleTableAdded}
