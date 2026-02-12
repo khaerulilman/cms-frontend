@@ -4,6 +4,7 @@ const BASE_URL = "";
 
 // Direct backend URL for full-page redirects (e.g., Google OAuth)
 // These bypass the proxy since the browser navigates directly
+// trigger commit
 export const BACKEND_URL = process.env.NEXT_PUBLIC_MAIN_API;
 
 if (!process.env.NEXT_PUBLIC_API_URL) {
