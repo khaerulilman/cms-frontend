@@ -451,7 +451,7 @@ export default function Home() {
               Build Your Dynamic Portfolio,
               <br />
               <span className="gradient-text">
-                Without Struggling With the Databasess
+                Without Struggling With the Database
               </span>
             </h1>
             <p className="text-lg sm:text-xl text-slate-400 mb-10 max-w-3xl mx-auto leading-relaxed">
