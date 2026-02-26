@@ -36,13 +36,13 @@ export function TableNameDisplay({
   }, [projectId, selectedTable, refreshKey]);
 
   return (
-    <div className="flex items-center gap-3">
-      <h1 className="text-2xl font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 text-transparent bg-clip-text">
+    <div className="flex items-center gap-2 flex-1">
+      <h1 className="text-lg lg:text-2xl font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 text-transparent bg-clip-text truncate">
         {tableName}
       </h1>
       <button
         onClick={() => onEditTable?.()}
-        className="px-2 py-1 rounded-lg text-sm bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:bg-slate-800 hover:border-blue-500/30 transition-all"
+        className="lg:px-2 lg:py-1 px-1 py-1 rounded-lg lg:text-sm text-xs lg:text-sm bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:bg-slate-800 hover:border-blue-500/30 transition-all"
         title="Edit table name"
       >
         ✎

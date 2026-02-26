@@ -22,18 +22,16 @@ export default function Hero() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
         <div className="grid lg:grid-cols-5 gap-12 items-center">
           {/* Left — Copy (takes 3 cols) */}
-          <div className="lg:col-span-3 text-left">
+          <div className="lg:col-span-3 text-left text-center lg:text-left">
             {/* Tag */}
 
             <h1 className="font-heading text-4xl sm:text-5xl lg:text-[3.5rem] xl:text-6xl font-bold text-white leading-[1.1] tracking-tight mb-6">
               Build Your Dynamic
               <br />
               Portfolio,{" "}
-              <span className="hero-gradient-text">
-                Without the Backend Hassle
-              </span>
+              <span className="gradient-text">Without the Backend Hassle</span>
             </h1>
-            <p className="text-base sm:text-lg text-slate-400 mb-10 max-w-xl leading-relaxed font-body">
+            <p className="text-base sm:text-lg text-slate-400 mt-6 mb-10 max-w-xl leading-relaxed font-body">
               A headless CMS built for developers. Manage portfolio content
               through an intuitive dashboard and access it via REST APIs — no
               server setup required.
@@ -86,7 +84,7 @@ export default function Hero() {
           </div>
 
           {/* Right — 3D Image (takes 2 cols) */}
-          <div className="lg:col-span-2 flex justify-center items-center relative">
+          <div className="hidden lg:flex lg:col-span-2 justify-center items-center relative">
             {/* Side glow effects */}
             <div className="absolute -left-10 top-1/4 w-32 h-32 bg-blue-500/30 rounded-full blur-3xl animate-pulse" />
             <div

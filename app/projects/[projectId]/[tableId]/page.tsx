@@ -3,7 +3,7 @@
 import { TableSidebar } from "@/features/table/components/TableSidebar";
 import { TableDetail } from "@/features/table/components/TableDetail";
 import { ApiGuideSidebar } from "@/features/table/components/ApiGuideSidebar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CardFlow } from "@/features/table/components/cardFlow";
 import { useParams, useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -27,8 +27,14 @@ function TableManagementContent() {
     imageUrl?: string;
   } | null>(null);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
-  const [tableName, setTableName] = useState<string>("");
+  const [tableName] = useState<string>("");
   const [tableIdToDelete, setTableIdToDelete] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Set sidebar initial state based on screen size (hydration-safe)
+  useEffect(() => {
+    setIsSidebarOpen(window.innerWidth >= 1024);
+  }, []);
 
   const handleRefresh = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -94,13 +100,22 @@ function TableManagementContent() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-slate-100">
+    <div className="flex h-[calc(100vh-64px)] bg-[#0a0f1a] relative">
+      {/* Sidebar - Responsive with self-managed overlay */}
       <TableSidebar
-        onSelectTable={() => {}}
+        isOpen={isSidebarOpen}
+        onSelectTable={() => {
+          // Close sidebar on mobile after selecting a table
+          if (typeof window !== "undefined" && window.innerWidth < 1024) {
+            setIsSidebarOpen(false);
+          }
+        }}
         onAddTable={handleAddTable}
         onDeleteTable={handleDeleteTable}
         refreshKey={sidebarRefresh}
       />
+
+      {/* Table Detail - Responsive */}
       <TableDetail
         selectedTable={selectedTable}
         onSelectColumnButton={handleAddColumn}
@@ -114,6 +129,7 @@ function TableManagementContent() {
         onOpenGuide={() => setIsGuideOpen(true)}
         onEditTable={handleEditTable}
         tableNameRefreshKey={tableNameRefreshKey}
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
       <CardFlow

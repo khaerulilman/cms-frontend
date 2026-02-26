@@ -20,9 +20,6 @@ const TestimonialCard = ({
     </div>
     <p className="text-slate-300 mb-6 leading-relaxed">&quot;{content}&quot;</p>
     <div className="flex items-center gap-4">
-      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold">
-        {name.charAt(0)}
-      </div>
       <div>
         <h4 className="text-white font-medium">{name}</h4>
         <p className="text-slate-400 text-sm">{role}</p>

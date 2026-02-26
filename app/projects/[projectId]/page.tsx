@@ -13,7 +13,7 @@ export default function ProjectPage() {
   const [sidebarRefresh, setSidebarRefresh] = useState(0);
   const [tableIdToDelete, setTableIdToDelete] = useState<string | null>(null);
 
-  const handleSelectTable = (tableId: string) => {
+  const handleSelectTable = (tableId?: string) => {
     // Handled by TableSidebar's internal navigation
   };
 

@@ -94,7 +94,7 @@ function LoginContent() {
               Welcome Back
             </span>
           </h1>
-          <p className="text-slate-400">Sign in to your PortfolioCMS account</p>
+          <p className="text-slate-400">Sign in to your Your Dash account</p>
         </div>
 
         <div className="bg-slate-900/30 backdrop-blur-sm border border-slate-800/50 rounded-2xl p-8">
