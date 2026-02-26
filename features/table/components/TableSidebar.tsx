@@ -44,7 +44,7 @@ export function TableSidebar({
     if (!projectId) return;
 
     // Jika refreshKey > 0, invalidate cache untuk force refresh
-    if (refreshKey > 0) {
+    if ((refreshKey ?? 0) > 0) {
       delete tableCache[projectId];
     }
 
@@ -83,7 +83,7 @@ export function TableSidebar({
 
   const handleTableClick = (tableId: string) => {
     router.push(`/projects/${projectId}/${tableId}`);
-    onSelectTable(tableId);
+    onSelectTable?.(tableId);
   };
 
   const handleAddTable = () => {
@@ -97,7 +97,7 @@ export function TableSidebar({
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-20 lg:hidden"
-          onClick={onSelectTable}
+          onClick={() => onSelectTable?.()}
         />
       )}
 
