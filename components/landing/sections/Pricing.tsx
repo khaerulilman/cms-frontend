@@ -1,5 +1,6 @@
 import { pricingPlans } from "../data";
 import { CheckCircleIcon } from "../icons";
+import Link from "next/link";
 
 const PricingCard = ({
   title,
@@ -30,15 +31,18 @@ const PricingCard = ({
         </li>
       ))}
     </ul>
-    <button
-      className={`w-full py-3 rounded-xl font-medium btn-glow ${
-        isPrimary
-          ? "bg-gradient-to-r from-blue-500 to-cyan-400 text-white"
-          : "bg-slate-800 text-white border border-slate-700 hover-glow"
-      }`}
-    >
-      Get Started
-    </button>
+    <Link href="/projects" passHref>
+      <button
+        className={`w-full py-3 rounded-xl font-medium btn-glow ${
+          isPrimary
+            ? "bg-gradient-to-r from-blue-500 to-cyan-400 text-white"
+            : "bg-slate-800 text-white border border-slate-700 hover-glow"
+        }`}
+        type="button"
+      >
+        Get Started
+      </button>
+    </Link>
   </div>
 );
 

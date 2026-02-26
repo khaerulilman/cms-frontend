@@ -47,18 +47,18 @@ export default function Hero() {
                 Start Free Now
                 <ArrowRightIcon />
               </Link>
-              <a
+              {/* <a
                 href="#features"
                 className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full font-medium text-sm text-slate-300 border border-slate-700/60 hover:border-blue-500/40 transition-all duration-300 bg-white/[0.03] backdrop-blur-sm"
               >
                 Explore Features
-              </a>
+              </a> */}
             </div>
             {/* Stats — compact horizontal */}
             <div className="flex items-center gap-8 sm:gap-10">
               <div>
                 <div className="text-2xl sm:text-3xl font-bold text-white font-heading">
-                  <CountUpNumber to={10000} suffix="+" />
+                  <CountUpNumber to={100} suffix="+" />
                 </div>
                 <div className="text-slate-500 text-xs mt-1 uppercase tracking-wider font-medium">
                   Active Users
@@ -67,7 +67,7 @@ export default function Hero() {
               <div className="w-px h-10 bg-slate-800" />
               <div>
                 <div className="text-2xl sm:text-3xl font-bold text-white font-heading">
-                  <CountUpNumber to={50} suffix="M+" />
+                  <CountUpNumber to={1} suffix="k+" />
                 </div>
                 <div className="text-slate-500 text-xs mt-1 uppercase tracking-wider font-medium">
                   API Calls / Mo

@@ -8,16 +8,14 @@ export default function CodePreview() {
             <div className="w-3 h-3 rounded-full bg-red-500/70" />
             <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
             <div className="w-3 h-3 rounded-full bg-green-500/70" />
-            <span className="ml-4 text-sm text-slate-400">
-              api-example.js
-            </span>
+            <span className="ml-4 text-sm text-slate-400">api-example.js</span>
           </div>
           {/* Code Content */}
           <div className="p-6 font-mono text-sm leading-relaxed overflow-x-auto">
             <pre className="text-slate-300">
               <code>
                 {`// Fetch your portfolio data with a simple API call
-const response = await fetch('https://yourdash.space/api/v1/projects', {
+const response = await fetch(\`${process.env.NEXT_PUBLIC_MAIN_API}/api/v1/projects\`, {
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY',
     'Content-Type': 'application/json'

@@ -7,9 +7,9 @@ const BASE_URL = "";
 // trigger commit
 export const BACKEND_URL = process.env.NEXT_PUBLIC_MAIN_API;
 
-if (!process.env.NEXT_PUBLIC_API_URL) {
+if (!process.env.NEXT_PUBLIC_MAIN_API) {
   throw new Error(
-    "NEXT_PUBLIC_API_URL is not defined in environment variables",
+    "NEXT_PUBLIC_MAIN_API is not defined in environment variables",
   );
 }
 

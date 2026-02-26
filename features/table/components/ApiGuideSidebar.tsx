@@ -28,7 +28,7 @@ export function ApiGuideSidebar({
     return null;
   }
 
-  const apiUrl = `https://yourdash-virid.vercel.app/api/v1/project/${
+  const apiUrl = `${process.env.NEXT_PUBLIC_MAIN_API}/api/v1/project/${
     projectId || ":projectId"
   }/table/${tableId || ":tableId"}/simplify`;
 
