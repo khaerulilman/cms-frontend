@@ -2,7 +2,7 @@
 
 import { api } from "@/lib/api";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 type Table = {
   id: string;
@@ -14,6 +14,33 @@ type Table = {
 };
 
 const tableCache: Record<string, Table[]> = {};
+
+const STORAGE_KEY_PREFIX = "tableOrder_";
+
+const getStoredOrder = (projectId: string): string[] | null => {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem(`${STORAGE_KEY_PREFIX}${projectId}`);
+  return stored ? JSON.parse(stored) : null;
+};
+
+const storeOrder = (projectId: string, order: string[]) => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(
+    `${STORAGE_KEY_PREFIX}${projectId}`,
+    JSON.stringify(order),
+  );
+};
+
+const clearStoredOrder = (projectId: string) => {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(`${STORAGE_KEY_PREFIX}${projectId}`);
+};
+
+// Helper to detect mobile device
+const isMobile = () => {
+  if (typeof window === "undefined") return false;
+  return window.innerWidth < 1024; // lg breakpoint
+};
 
 interface TableSidebarProps {
   onSelectTable?: (tableId?: string) => void;
@@ -42,6 +69,59 @@ export function TableSidebar({
   const [loading, setLoading] = useState<boolean>(!cachedTables);
   const [error, setError] = useState<string | null>(null);
 
+  // Drag and drop state
+  const [isReordering, setIsReordering] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [draggedTable, setDraggedTable] = useState<Table | null>(null);
+  const [tablesBeforeReorder, setTablesBeforeReorder] = useState<Table[]>([]);
+  const dragIdRef = useRef<string | null>(null);
+  const draggedIndexRef = useRef<number | null>(null);
+
+  // Long press state for mobile
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [longPressedIndex, setLongPressedIndex] = useState<number | null>(null);
+
+  // Apply stored order to tables
+  const applyStoredOrder = useCallback(
+    (tablesData: Table[]): Table[] => {
+      const storedOrder = getStoredOrder(projectId);
+      if (!storedOrder || storedOrder.length === 0) {
+        return tablesData.sort(
+          (a: Table, b: Table) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+      }
+
+      // Create a map to track tables and prevent duplicates
+      const tablesMap = new Map<string, Table>();
+      tablesData.forEach((t) => tablesMap.set(t.id, t));
+
+      // Build result array with unique tables in stored order
+      const result: Table[] = [];
+      const processedIds = new Set<string>();
+
+      // Add tables in stored order (if they exist)
+      for (const id of storedOrder) {
+        const table = tablesMap.get(id);
+        if (table && !processedIds.has(id)) {
+          result.push(table);
+          processedIds.add(id);
+        }
+      }
+
+      // Add remaining tables not in stored order
+      for (const [id, table] of tablesMap.entries()) {
+        if (!processedIds.has(id)) {
+          result.push(table);
+          processedIds.add(id);
+        }
+      }
+
+      return result;
+    },
+    [projectId],
+  );
+
   useEffect(() => {
     if (!projectId) return;
 
@@ -52,11 +132,7 @@ export function TableSidebar({
 
     // Jika ada cache dan tidak perlu refresh → skip fetch
     if (tableCache[projectId]) {
-      // Sort cached tables by createdAt descending (newest first)
-      const sortedTables = tableCache[projectId].sort(
-        (a: Table, b: Table) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+      const sortedTables = applyStoredOrder(tableCache[projectId]);
       setTables(sortedTables);
       setLoading(false);
       return;
@@ -66,11 +142,7 @@ export function TableSidebar({
       try {
         setLoading(true);
         const data = await api.getAllUserTables(projectId);
-        // Sort tables by createdAt descending (newest first)
-        const sortedTables = data.data.sort(
-          (a: Table, b: Table) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        );
+        const sortedTables = applyStoredOrder(data.data);
         tableCache[projectId] = sortedTables;
         setTables(sortedTables);
       } catch (err: any) {
@@ -81,7 +153,7 @@ export function TableSidebar({
     };
 
     fetchTables();
-  }, [projectId, refreshKey]);
+  }, [projectId, refreshKey, applyStoredOrder]);
 
   const handleTableClick = (tableId: string) => {
     router.push(`/projects/${projectId}/${tableId}`);
@@ -91,6 +163,140 @@ export function TableSidebar({
   const handleAddTable = () => {
     if (!projectId) return;
     onAddTable?.();
+  };
+
+  // Start reordering mode
+  const startReorder = () => {
+    setTablesBeforeReorder([...tables]);
+    setIsReordering(true);
+  };
+
+  // Save reordered tables
+  const saveOrder = () => {
+    const order = tables.map((t) => t.id);
+    storeOrder(projectId, order);
+    setIsReordering(false);
+  };
+
+  // Cancel reordering
+  const cancelReorder = () => {
+    setTables(tablesBeforeReorder);
+    setIsReordering(false);
+  };
+
+  // Drag handlers for desktop
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    const currentDragId = `drag-${Date.now()}-${Math.random()}`;
+    dragIdRef.current = currentDragId;
+    draggedIndexRef.current = index;
+    setDraggedIndex(index);
+    setDraggedTable(tables[index]);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+
+    const currentDraggedIndex = draggedIndexRef.current;
+    if (currentDraggedIndex === null || currentDraggedIndex === index || !dragIdRef.current)
+      return;
+
+    // Use a unique ID to prevent batched update conflicts
+    const currentDragId = dragIdRef.current;
+    setTables((prevTables) => {
+      // Check if the drag operation is still valid
+      if (dragIdRef.current !== currentDragId) return prevTables;
+      const idx = draggedIndexRef.current;
+      if (idx === null) return prevTables;
+      if (index === idx) return prevTables;
+
+      const newTables = [...prevTables];
+      const [removed] = newTables.splice(idx, 1);
+      newTables.splice(index, 0, removed);
+      return newTables;
+    });
+
+    // Update dragged index separately to avoid conflicts
+    requestAnimationFrame(() => {
+      if (dragIdRef.current === currentDragId) {
+        draggedIndexRef.current = index;
+        setDraggedIndex(index);
+      }
+    });
+  };
+
+  const handleDragEnd = () => {
+    dragIdRef.current = null;
+    draggedIndexRef.current = null;
+    setDraggedIndex(null);
+    setDraggedTable(null);
+  };
+
+  // Long press handlers for mobile
+  const handleTouchStart = (e: React.TouchEvent, index: number) => {
+    if (!isReordering || dragIdRef.current) return;
+
+    const currentDragId = `drag-${Date.now()}-${Math.random()}`;
+    dragIdRef.current = currentDragId;
+    draggedIndexRef.current = index;
+
+    longPressTimerRef.current = setTimeout(() => {
+      if (dragIdRef.current === currentDragId) {
+        setLongPressedIndex(index);
+        setDraggedTable(tables[index]);
+      }
+    }, 300);
+  };
+
+  const handleTouchMove = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const handleTouchEnd = (index: number) => {
+    const currentDragId = dragIdRef.current;
+    const currentLongPressedIndex = longPressedIndex;
+
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+
+    // Only process move if we have a valid drag and different target
+    if (
+      currentDragId &&
+      currentLongPressedIndex !== null &&
+      currentLongPressedIndex !== index &&
+      draggedTable
+    ) {
+      setTables((prevTables) => {
+        // Check if drag is still valid
+        if (dragIdRef.current !== currentDragId) return prevTables;
+
+        const draggedIdx = prevTables.findIndex(
+          (t) => t.id === draggedTable.id,
+        );
+        if (draggedIdx === -1 || draggedIdx === index) return prevTables;
+
+        const newTables = [...prevTables];
+        const [removed] = newTables.splice(draggedIdx, 1);
+        newTables.splice(index, 0, removed);
+        return newTables;
+      });
+    }
+
+    // Clean up state after a small delay to avoid conflicts
+    requestAnimationFrame(() => {
+      if (dragIdRef.current === currentDragId) {
+        setLongPressedIndex(null);
+        setDraggedTable(null);
+        dragIdRef.current = null;
+        draggedIndexRef.current = null;
+      }
+    });
   };
 
   return (
@@ -157,22 +363,98 @@ export function TableSidebar({
           </button>
         </div>
 
+        {/* Reorder controls */}
+        {!isReordering && tables.length > 1 && (
+          <button
+            onClick={startReorder}
+            className="mb-3 text-xs text-slate-400 hover:text-blue-400 transition-colors flex items-center gap-1"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+              />
+            </svg>
+            Reorder
+          </button>
+        )}
+
+        {/* Save/Cancel buttons */}
+        {isReordering && (
+          <div className="mb-3 flex gap-2">
+            <button
+              onClick={cancelReorder}
+              className="flex-1 py-1 px-2 text-xs rounded-lg border border-slate-700/50 text-slate-400 hover:bg-slate-800/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={saveOrder}
+              className="flex-1 py-1 px-2 text-xs rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-400 hover:bg-blue-600/30 transition-colors"
+            >
+              Save
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col gap-3 flex-1">
           {loading ? (
             <p className="text-sm text-slate-400">Loading tables...</p>
           ) : error ? (
             <p className="text-sm text-red-400">{error}</p>
           ) : tables.length > 0 ? (
-            tables.map((table) => (
-              <div key={table.id} className="group relative">
+            tables.map((table, index) => (
+              <div
+                key={table.id}
+                className={`group relative ${isReordering ? "cursor-move" : ""}`}
+                draggable={isReordering && !isMobile()}
+                onDragStart={(e) => isReordering && handleDragStart(e, index)}
+                onDragOver={(e) => isReordering && handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+                onTouchStart={(e) => isReordering && handleTouchStart(e, index)}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={() => isReordering && handleTouchEnd(index)}
+              >
                 <button
-                  onClick={() => handleTableClick(table.id)}
-                  className={`w-full text-left px-4 py-2 rounded-xl transition-all border-2 border-slate-700/30 hover:bg-slate-800/50 hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/10`}
+                  onClick={() => !isReordering && handleTableClick(table.id)}
+                  className={`w-full text-left px-4 py-2 rounded-xl transition-all border-2 ${
+                    draggedIndex === index || longPressedIndex === index
+                      ? "border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/10"
+                      : "border-slate-700/30 hover:bg-slate-800/50 hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/10"
+                  }`}
                 >
+                  {/* Drag handle - desktop */}
+                  {isReordering && (
+                    <span className="hidden lg:inline mr-2 text-slate-500 hover:text-slate-300">
+                      <svg
+                        className="w-4 h-4 inline"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 8h16M4 16h16"
+                        />
+                      </svg>
+                    </span>
+                  )}
                   {table.name + " " + (table.isSubTable ? "[ ]" : "")}
                 </button>
                 <button
-                  onClick={() => onDeleteTable?.(table.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteTable?.(table.id);
+                  }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-red-400 hover:text-red-300"
                   title="Delete table"
                 >
