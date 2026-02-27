@@ -104,6 +104,7 @@ function TableManagementContent() {
       {/* Sidebar - Responsive with self-managed overlay */}
       <TableSidebar
         isOpen={isSidebarOpen}
+        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         onSelectTable={() => {
           // Close sidebar on mobile after selecting a table
           if (typeof window !== "undefined" && window.innerWidth < 1024) {
@@ -129,7 +130,6 @@ function TableManagementContent() {
         onOpenGuide={() => setIsGuideOpen(true)}
         onEditTable={handleEditTable}
         tableNameRefreshKey={tableNameRefreshKey}
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
       <CardFlow

@@ -19,11 +19,10 @@ export function TableDetail({
   projectId,
   onEditTable,
   tableNameRefreshKey,
-  onToggleSidebar,
 }: any) {
   const { data, loading, error } = useTableDetail(
     selectedTable,
-    refreshTrigger
+    refreshTrigger,
   );
 
   const [subTables, setSubTables] = useState<any[]>([]);
@@ -133,9 +132,9 @@ export function TableDetail({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -145,26 +144,6 @@ export function TableDetail({
         {/* Header */}
         <div className="flex justify-between items-center px-3 lg:px-6 py-3 lg:py-4 border-b border-slate-700/50 gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            {/* Mobile Hamburger Button */}
-            <button
-              onClick={() => onToggleSidebar?.()}
-              className="lg:hidden p-2 rounded-lg hover:bg-slate-800/50 transition-colors text-slate-400 hover:text-white"
-              aria-label="Toggle sidebar"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
             <TableNameDisplay
               selectedTable={selectedTable}
               projectId={projectId}
@@ -202,9 +181,27 @@ export function TableDetail({
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.5"/>
-                <circle cx="6" cy="12" r="2" fill="currentColor" opacity="0.3"/>
-                <circle cx="18" cy="12" r="2" fill="currentColor" opacity="0.3"/>
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="2"
+                  fill="currentColor"
+                  opacity="0.5"
+                />
+                <circle
+                  cx="6"
+                  cy="12"
+                  r="2"
+                  fill="currentColor"
+                  opacity="0.3"
+                />
+                <circle
+                  cx="18"
+                  cy="12"
+                  r="2"
+                  fill="currentColor"
+                  opacity="0.3"
+                />
               </svg>
             </button>
 
@@ -218,11 +215,38 @@ export function TableDetail({
                     setIsMobileMenuOpen(false);
                   }}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <rect x="3" y="4" width="18" height="14" rx="2" strokeWidth={2} />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9h8" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 13h5" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 20l2-2-2-2" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <rect
+                      x="3"
+                      y="4"
+                      width="18"
+                      height="14"
+                      rx="2"
+                      strokeWidth={2}
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 9h8"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 13h5"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 20l2-2-2-2"
+                    />
                   </svg>
                   Get Data
                 </button>
@@ -233,12 +257,42 @@ export function TableDetail({
                     setIsMobileMenuOpen(false);
                   }}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h8" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12h8" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 18h8" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9v8" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 13h8" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h8"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 12h8"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 18h8"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 9v8"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 13h8"
+                    />
                   </svg>
                   Add Column
                 </button>
@@ -279,7 +333,10 @@ export function TableDetail({
                         onDoubleClick={() => onEditColumn?.(column)}
                         onClick={() => {
                           // On mobile, use single click/tap to edit
-                          if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                          if (
+                            typeof window !== "undefined" &&
+                            window.innerWidth < 1024
+                          ) {
                             onEditColumn?.(column);
                           }
                         }}
@@ -326,7 +383,7 @@ export function TableDetail({
                           const cellValue = cells.find(
                             (cell) =>
                               cell.rowId === row.id &&
-                              cell.columnId === column.id
+                              cell.columnId === column.id,
                           );
                           return (
                             <td
@@ -336,7 +393,7 @@ export function TableDetail({
                                   row.id,
                                   column.id,
                                   cellValue?.value || "",
-                                  cellValue?.imageUrl || ""
+                                  cellValue?.imageUrl || "",
                                 )
                               }
                               className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs lg:text-sm text-slate-300 cursor-pointer hover:bg-blue-500/10 transition-colors min-w-[120px] max-w-[200px]"
@@ -344,7 +401,7 @@ export function TableDetail({
                               <div className="truncate">
                                 {renderCellValue(
                                   cellValue?.value || "",
-                                  cellValue?.imageUrl || undefined
+                                  cellValue?.imageUrl || undefined,
                                 )}
                               </div>
                             </td>

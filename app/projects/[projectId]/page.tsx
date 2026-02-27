@@ -2,7 +2,7 @@
 
 import { TableSidebar } from "@/features/table/components/TableSidebar";
 import { CardFlow } from "@/features/table/components/cardFlow";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 export default function ProjectPage() {
@@ -12,9 +12,17 @@ export default function ProjectPage() {
   const [isOpenCardFlow, setIsOpenCardFlow] = useState<string | null>(null);
   const [sidebarRefresh, setSidebarRefresh] = useState(0);
   const [tableIdToDelete, setTableIdToDelete] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    setIsSidebarOpen(window.innerWidth >= 1024);
+  }, []);
 
   const handleSelectTable = (tableId?: string) => {
     // Handled by TableSidebar's internal navigation
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
   };
 
   const handleAddTable = () => {
@@ -38,10 +46,12 @@ export default function ProjectPage() {
   return (
     <div className="flex h-[calc(100vh-64px)] bg-[#0a0f1a]">
       <TableSidebar
+        isOpen={isSidebarOpen}
         onSelectTable={handleSelectTable}
         refreshKey={sidebarRefresh}
         onAddTable={handleAddTable}
         onDeleteTable={handleDeleteTable}
+        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
       />
 
       <main className="flex-1 p-8 overflow-auto text-white flex items-center justify-center">
