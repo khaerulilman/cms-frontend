@@ -134,6 +134,12 @@ class ApiClient {
     });
   }
 
+  duplicateTable(tableId: string) {
+    return this.request(`/api/v1/tables/${tableId}/duplicate`, {
+      method: "POST",
+    });
+  }
+
   createProject(name: string, description: string) {
     return this.request("/api/v1/projects", {
       method: "POST",

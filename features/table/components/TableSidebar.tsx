@@ -68,6 +68,19 @@ export function TableSidebar({
   const [tables, setTables] = useState<Table[]>(cachedTables || []);
   const [loading, setLoading] = useState<boolean>(!cachedTables);
   const [error, setError] = useState<string | null>(null);
+  const [activeTableId, setActiveTableId] = useState<string | null>(null);
+  // Set initial activeTableId from route on mount and when projectId/table list changes
+  useEffect(() => {
+    if (!projectId || !tables.length) return;
+    // Try to get tableId from route params
+    const routeTableId = params.tableId as string | undefined;
+    if (routeTableId && tables.some((t) => t.id === routeTableId)) {
+      setActiveTableId(routeTableId);
+    } else {
+      // If no tableId in route, default to first table
+      setActiveTableId(tables[0].id);
+    }
+  }, [projectId, tables, params.tableId]);
 
   // Drag and drop state
   const [isReordering, setIsReordering] = useState(false);
@@ -156,6 +169,7 @@ export function TableSidebar({
   }, [projectId, refreshKey, applyStoredOrder]);
 
   const handleTableClick = (tableId: string) => {
+    setActiveTableId(tableId);
     router.push(`/projects/${projectId}/${tableId}`);
     onSelectTable?.(tableId);
   };
@@ -199,7 +213,11 @@ export function TableSidebar({
     e.dataTransfer.dropEffect = "move";
 
     const currentDraggedIndex = draggedIndexRef.current;
-    if (currentDraggedIndex === null || currentDraggedIndex === index || !dragIdRef.current)
+    if (
+      currentDraggedIndex === null ||
+      currentDraggedIndex === index ||
+      !dragIdRef.current
+    )
       return;
 
     // Use a unique ID to prevent batched update conflicts
@@ -424,11 +442,14 @@ export function TableSidebar({
               >
                 <button
                   onClick={() => !isReordering && handleTableClick(table.id)}
-                  className={`w-full text-left px-4 py-2 rounded-xl transition-all border-2 ${
-                    draggedIndex === index || longPressedIndex === index
-                      ? "border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/10"
-                      : "border-slate-700/30 hover:bg-slate-800/50 hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/10"
-                  }`}
+                  className={`w-full text-left px-4 py-2 rounded-xl transition-all border-2
+                    ${
+                      draggedIndex === index ||
+                      longPressedIndex === index ||
+                      activeTableId === table.id
+                        ? "border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/10 text-blue-400"
+                        : "border-slate-700/30 hover:bg-slate-800/50 hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/10"
+                    }`}
                 >
                   {/* Drag handle - desktop */}
                   {isReordering && (
