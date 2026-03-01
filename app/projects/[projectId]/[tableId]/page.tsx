@@ -30,6 +30,7 @@ function TableManagementContent() {
   const [tableName] = useState<string>("");
   const [tableIdToDelete, setTableIdToDelete] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
 
   // Set sidebar initial state based on screen size (hydration-safe)
   useEffect(() => {
@@ -99,6 +100,11 @@ function TableManagementContent() {
     setIsOpenCardFlow("update-cell");
   };
 
+  const handleBulkDeleteRows = (rowIds: string[]) => {
+    setSelectedRowIds(rowIds);
+    setIsOpenCardFlow("bulk-delete-rows");
+  };
+
   return (
     <div className="flex h-[calc(100vh-64px)] bg-[#0a0f1a] relative">
       {/* Sidebar - Responsive with self-managed overlay */}
@@ -130,12 +136,14 @@ function TableManagementContent() {
         onOpenGuide={() => setIsGuideOpen(true)}
         onEditTable={handleEditTable}
         tableNameRefreshKey={tableNameRefreshKey}
+        onBulkDeleteRows={handleBulkDeleteRows}
       />
 
       <CardFlow
         isOpen={isOpenCardFlow}
         selectedTable={tableIdToDelete || selectedTable}
         selectedRow={selectedRowId}
+        selectedRows={selectedRowIds}
         selectedColumn={selectedColumnId}
         selectedColumnData={selectedColumnData}
         selectedCell={selectedCellData}
@@ -143,6 +151,7 @@ function TableManagementContent() {
         onClose={() => {
           setIsOpenCardFlow(null);
           setSelectedRowId(null);
+          setSelectedRowIds([]);
           setSelectedColumnId(null);
           setSelectedColumnData(null);
           setSelectedCellData(null);

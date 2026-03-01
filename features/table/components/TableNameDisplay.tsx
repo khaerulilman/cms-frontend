@@ -20,11 +20,15 @@ export function TableNameDisplay({
         setLoading(true);
         const data = await api.getAllUserTables(projectId);
         const currentTable = data.data.find(
-          (table: any) => table.id === selectedTable
+          (table: any) => table.id === selectedTable,
         );
         if (currentTable) {
-          setTableName(currentTable.name);
+          setTableName(
+            currentTable.name + " " + (currentTable.isSubTable ? "[ ]" : ""),
+          );
         }
+
+        console.log(currentTable);
       } catch (err) {
         console.error("Failed to fetch table name:", err);
       } finally {

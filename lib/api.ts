@@ -134,6 +134,13 @@ class ApiClient {
     });
   }
 
+  duplicateTable(tableId: string, isSubTable?: boolean) {
+    return this.request(`/api/v1/tables/${tableId}/duplicate`, {
+      method: "POST",
+      body: { isSubTable },
+    });
+  }
+
   createProject(name: string, description: string) {
     return this.request("/api/v1/projects", {
       method: "POST",
@@ -150,6 +157,13 @@ class ApiClient {
   deleteRow(rowId: string) {
     return this.request(`/api/v1/cms-rows/${rowId}`, {
       method: "DELETE",
+    });
+  }
+
+  bulkDeleteRows(rowIds: string[]) {
+    return this.request("/api/v1/cms-rows/bulk", {
+      method: "DELETE",
+      body: { rowIds },
     });
   }
 
@@ -219,10 +233,10 @@ class ApiClient {
     });
   }
 
-  updateTables(tableId: string, name: string) {
+  updateTables(tableId: string, name: string, isSubTable?: boolean) {
     return this.request(`/api/v1/tables/${tableId}`, {
       method: "PUT",
-      body: { name },
+      body: { name, isSubTable },
     });
   }
 
