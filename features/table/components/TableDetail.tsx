@@ -19,6 +19,7 @@ export function TableDetail({
   projectId,
   onEditTable,
   tableNameRefreshKey,
+  onBulkDeleteRows,
 }: any) {
   const { data, loading, error } = useTableDetail(
     selectedTable,
@@ -27,10 +28,16 @@ export function TableDetail({
 
   const [subTables, setSubTables] = useState<any[]>([]);
   const [tableNameMap, setTableNameMap] = useState<Record<string, string>>({});
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
 
   const columns = data?.columns || [];
   const rows = data?.rows || [];
   const cells = data?.cells || [];
+
+  // Clear selection when table changes or data refreshes
+  useEffect(() => {
+    setSelectedRowIds(new Set());
+  }, [selectedTable, refreshTrigger]);
 
   // Fetch sub-tables and create mapping
   useEffect(() => {
@@ -115,6 +122,31 @@ export function TableDetail({
 
   const handleDeleteRow = async (rowId: string) => {
     onSelectRowButton(rowId);
+  };
+
+  const handleToggleRowSelection = (rowId: string) => {
+    setSelectedRowIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(rowId)) {
+        next.delete(rowId);
+      } else {
+        next.add(rowId);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleAllRows = () => {
+    if (selectedRowIds.size === rows.length) {
+      setSelectedRowIds(new Set());
+    } else {
+      setSelectedRowIds(new Set(rows.map((r: any) => r.id)));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedRowIds.size === 0) return;
+    onBulkDeleteRows?.(Array.from(selectedRowIds));
   };
 
   const handleOpenSidebarGuide = async () => {
@@ -318,9 +350,24 @@ export function TableDetail({
               <table className="min-w-full divide-y divide-slate-700/50">
                 <thead className="bg-slate-800/50">
                   <tr>
+                    {/* Checkbox header */}
                     <th
                       scope="col"
-                      className="sticky left-0 z-10 bg-slate-800/50 px-3 lg:px-6 py-3 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider border-r border-slate-700/50 shadow-sm whitespace-nowrap"
+                      className="sticky left-0 z-10 bg-slate-800/50 px-2 lg:px-3 py-3 text-center border-r border-slate-700/50 shadow-sm w-10"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={
+                          rows.length > 0 && selectedRowIds.size === rows.length
+                        }
+                        onChange={handleToggleAllRows}
+                        className="w-4 h-4 cursor-pointer accent-blue-500"
+                        title="Select all rows"
+                      />
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 lg:px-6 py-3 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider border-r border-slate-700/50 shadow-sm whitespace-nowrap"
                     >
                       No
                     </th>
@@ -371,10 +418,21 @@ export function TableDetail({
                     rows.map((row, index) => (
                       <tr
                         key={row.id}
-                        className="hover:bg-slate-800/30 transition-colors duration-150"
+                        className={`hover:bg-slate-800/30 transition-colors duration-150 ${
+                          selectedRowIds.has(row.id) ? "bg-blue-500/10" : ""
+                        }`}
                       >
+                        {/* Checkbox */}
+                        <td className="sticky left-0 z-10 bg-slate-900/30 px-2 lg:px-3 py-3 lg:py-4 text-center border-r border-slate-700/50 shadow-sm w-10">
+                          <input
+                            type="checkbox"
+                            checked={selectedRowIds.has(row.id)}
+                            onChange={() => handleToggleRowSelection(row.id)}
+                            className="w-4 h-4 cursor-pointer accent-blue-500"
+                          />
+                        </td>
                         {/* No - Sticky Left */}
-                        <td className="sticky left-0 z-10 bg-slate-900/30 px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs lg:text-sm font-medium text-slate-300 text-center border-r border-slate-700/50 shadow-sm">
+                        <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs lg:text-sm font-medium text-slate-300 text-center border-r border-slate-700/50 shadow-sm">
                           {index + 1}
                         </td>
 
@@ -422,7 +480,7 @@ export function TableDetail({
                   ) : (
                     <tr>
                       <td
-                        colSpan={columns.length + 2}
+                        colSpan={columns.length + 3}
                         className="px-3 lg:px-6 py-8 lg:py-12 text-center text-xs lg:text-sm text-slate-400"
                       >
                         No rows yet. Click "Add Row" to get started.
@@ -440,11 +498,11 @@ export function TableDetail({
           )}
         </div>
 
-        {/* Footer with Add Row Button */}
+        {/* Footer with Add Row and Bulk Delete Buttons */}
         {columns.length > 0 && (
-          <div className="px-3 lg:px-6 py-2 lg:py-4 border-t border-slate-700/50 bg-slate-800/30">
+          <div className="px-3 lg:px-6 py-2 lg:py-4 border-t border-slate-700/50 bg-slate-800/30 flex gap-2">
             <button
-              className="w-full px-3 lg:px-4 py-2 rounded-xl border border-dashed
+              className="flex-1 px-3 lg:px-4 py-2 rounded-xl border border-dashed
         border-slate-700/50 text-slate-400
         hover:border-blue-500/50 hover:text-blue-400 hover:bg-blue-500/5
         transition-all text-sm lg:text-base"
@@ -452,6 +510,17 @@ export function TableDetail({
             >
               + Add Row
             </button>
+            {selectedRowIds.size > 0 && (
+              <button
+                className="px-3 lg:px-4 py-2 rounded-xl border border-dashed
+          border-red-700/50 text-red-400
+          hover:border-red-500/50 hover:text-red-300 hover:bg-red-500/10
+          transition-all text-sm lg:text-base whitespace-nowrap"
+                onClick={handleBulkDelete}
+              >
+                Delete ({selectedRowIds.size})
+              </button>
+            )}
           </div>
         )}
       </div>

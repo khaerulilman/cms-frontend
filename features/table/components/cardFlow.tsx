@@ -12,6 +12,7 @@ export function CardFlow({
   isOpen,
   selectedTable,
   selectedRow,
+  selectedRows,
   selectedColumn,
   selectedColumnData,
   selectedCell,
@@ -41,10 +42,13 @@ export function CardFlow({
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
 
   // Add table mode states
-  const [addTableMode, setAddTableMode] = useState<"input" | "duplicate">("input");
+  const [addTableMode, setAddTableMode] = useState<"input" | "duplicate">(
+    "input",
+  );
   const [allTables, setAllTables] = useState<any[]>([]);
-  const [selectedTableToDuplicate, setSelectedTableToDuplicate] =
-    useState<string | null>(null);
+  const [selectedTableToDuplicate, setSelectedTableToDuplicate] = useState<
+    string | null
+  >(null);
   const [loadingAllTables, setLoadingAllTables] = useState(false);
 
   // Track initial state for change detection
@@ -57,10 +61,15 @@ export function CardFlow({
   const [initialSelectedSubTableId, setInitialSelectedSubTableId] = useState<
     string | null
   >(null);
+  const [initialIsSubTable, setInitialIsSubTable] = useState(false);
 
   // Update tableName when editTable mode is opened
   React.useEffect(() => {
-    if (isOpen === "edit-table" && projectId && selectedTable) {
+    if (
+      (isOpen === "edit-table" || isOpen === "delete-table") &&
+      projectId &&
+      selectedTable
+    ) {
       const fetchTableName = async () => {
         try {
           const data = await api.getAllUserTables(projectId);
@@ -70,6 +79,8 @@ export function CardFlow({
           if (currentTable) {
             setTableName(currentTable.name);
             setInitialTableName(currentTable.name);
+            setIsSubTable(currentTable.isSubTable ?? false);
+            setInitialIsSubTable(currentTable.isSubTable ?? false);
           }
         } catch (err) {
           console.error("Failed to fetch table name:", err);
@@ -189,7 +200,12 @@ export function CardFlow({
   }
 
   // For add-table and delete-table modes, we don't need selectedTable
-  if (!selectedTable && isOpen !== "add-table" && isOpen !== "delete-table") {
+  if (
+    !selectedTable &&
+    isOpen !== "add-table" &&
+    isOpen !== "delete-table" &&
+    isOpen !== "bulk-delete-rows"
+  ) {
     return null;
   }
 
@@ -219,7 +235,9 @@ export function CardFlow({
           return selectedTableToDuplicate !== null;
         }
       case "edit-table":
-        return tableName !== initialTableName;
+        return (
+          tableName !== initialTableName || isSubTable !== initialIsSubTable
+        );
       case "update-cell":
         // Check for file upload, imageUrl changes, or cellValue/subTable changes
         return (
@@ -287,8 +305,9 @@ export function CardFlow({
       try {
         setLoading(true);
         setError(null);
-        await api.duplicateTable(selectedTableToDuplicate);
+        await api.duplicateTable(selectedTableToDuplicate, isSubTable);
         setSelectedTableToDuplicate(null);
+        setIsSubTable(false);
         onClose();
         onTableAdded?.();
       } catch (err: any) {
@@ -308,9 +327,10 @@ export function CardFlow({
     try {
       setLoading(true);
       setError(null);
-      await api.updateTables(selectedTable, tableName);
+      await api.updateTables(selectedTable, tableName, isSubTable);
 
       setTableName("");
+      setIsSubTable(false);
       onClose();
       onTableUpdated?.();
       onRefresh();
@@ -357,6 +377,29 @@ export function CardFlow({
       onRowDeleted?.();
     } catch (err: any) {
       setError(err.message || "Failed to delete row");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkDeleteRows = async () => {
+    if (!selectedRows || selectedRows.length === 0) {
+      setError("No rows selected");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      await api.bulkDeleteRows(selectedRows);
+
+      invalidateTableDetail(selectedTable);
+      invalidateAllTableCache();
+      onClose();
+      onRefresh();
+      onRowDeleted?.();
+    } catch (err: any) {
+      setError(err.message || "Failed to delete rows");
     } finally {
       setLoading(false);
     }
@@ -601,11 +644,13 @@ export function CardFlow({
                       ? "Delete Table"
                       : isOpen === "delete-row"
                         ? "Delete Row"
-                        : isOpen === "delete-column"
-                          ? "Delete Column"
-                          : isOpen === "update-cell"
-                            ? "Edit Cell"
-                            : ""}
+                        : isOpen === "bulk-delete-rows"
+                          ? "Delete Rows"
+                          : isOpen === "delete-column"
+                            ? "Delete Column"
+                            : isOpen === "update-cell"
+                              ? "Edit Cell"
+                              : ""}
           </h2>
           <button
             onClick={onClose}
@@ -701,22 +746,6 @@ export function CardFlow({
                     className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                     disabled={loading}
                   />
-                  <div className="flex items-center gap-2 mt-4">
-                    <input
-                      type="checkbox"
-                      id="isSubTable"
-                      checked={isSubTable}
-                      onChange={(e) => setIsSubTable(e.target.checked)}
-                      className="w-4 h-4 cursor-pointer"
-                      disabled={loading}
-                    />
-                    <label
-                      htmlFor="isSubTable"
-                      className="text-sm font-medium cursor-pointer"
-                    >
-                      Sub Table
-                    </label>
-                  </div>
                 </div>
               )}
 
@@ -759,6 +788,24 @@ export function CardFlow({
                 </div>
               )}
 
+              {/* Sub Table Checkbox - Available for both input and duplicate modes */}
+              <div className="flex items-center gap-2 mt-4">
+                <input
+                  type="checkbox"
+                  id="isSubTable"
+                  checked={isSubTable}
+                  onChange={(e) => setIsSubTable(e.target.checked)}
+                  className="w-4 h-4 cursor-pointer"
+                  disabled={loading}
+                />
+                <label
+                  htmlFor="isSubTable"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Sub Table
+                </label>
+              </div>
+
               {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
             </div>
           )}
@@ -776,6 +823,22 @@ export function CardFlow({
                 className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                 disabled={loading}
               />
+              <div className="flex items-center gap-2 mt-4">
+                <input
+                  type="checkbox"
+                  id="editIsSubTable"
+                  checked={isSubTable}
+                  onChange={(e) => setIsSubTable(e.target.checked)}
+                  className="w-4 h-4 cursor-pointer"
+                  disabled={loading}
+                />
+                <label
+                  htmlFor="editIsSubTable"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Sub Table
+                </label>
+              </div>
               {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
             </div>
           )}
@@ -783,8 +846,9 @@ export function CardFlow({
           {isOpen === "delete-table" && (
             <div>
               <p className="text-sm text-slate-600 mb-4">
-                Are you sure you want to delete this table? This action cannot
-                be undone.
+                Are you sure you want to delete the table{" "}
+                <span className="font-semibold text-white">"{tableName}"</span>?
+                This action cannot be undone.
               </p>
               {error && <p className="text-red-500 text-sm">{error}</p>}
             </div>
@@ -795,6 +859,20 @@ export function CardFlow({
               <p className="text-sm text-slate-600 mb-4">
                 Are you sure you want to delete this row? This action cannot be
                 undone.
+              </p>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+            </div>
+          )}
+
+          {isOpen === "bulk-delete-rows" && (
+            <div>
+              <p className="text-sm text-slate-600 mb-4">
+                Are you sure you want to delete{" "}
+                <span className="font-semibold text-white">
+                  {selectedRows?.length || 0}
+                </span>{" "}
+                row{(selectedRows?.length || 0) > 1 ? "s" : ""}? This action
+                cannot be undone.
               </p>
               {error && <p className="text-red-500 text-sm">{error}</p>}
             </div>
@@ -1067,6 +1145,17 @@ export function CardFlow({
               className="flex-1 px-4 py-2 rounded-xl bg-red-500/80 text-white hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/25 transition disabled:opacity-50"
             >
               {loading ? "Deleting..." : "Delete"}
+            </button>
+          )}
+          {isOpen === "bulk-delete-rows" && (
+            <button
+              onClick={handleBulkDeleteRows}
+              disabled={loading}
+              className="flex-1 px-4 py-2 rounded-xl bg-red-500/80 text-white hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/25 transition disabled:opacity-50"
+            >
+              {loading
+                ? "Deleting..."
+                : `Delete ${selectedRows?.length || 0} Row${(selectedRows?.length || 0) > 1 ? "s" : ""}`}
             </button>
           )}
           {isOpen === "delete-column" && (
